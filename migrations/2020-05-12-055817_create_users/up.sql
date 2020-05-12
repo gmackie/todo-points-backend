@@ -1,0 +1,10 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR NOT NULL,
+  firstName VARCHAR NOT NULL,
+  lastName VARCHAR NOT NULL,
+  email VARCHAR NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT 'f',
+  currentPointTotal INT NOT NULL DEFAULT 0,
+  currentStatus VARCHAR NOT NULL DEFAULT "NONE",
+);
