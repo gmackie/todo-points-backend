@@ -11,6 +11,8 @@ use crate::schema::{
 #[table_name = "tasks"]
 pub struct NewTask {
     pub description: String,
+    pub points: i32,
+    pub user_id: i32
 }
 
 #[derive(Debug, Queryable, Serialize)]
@@ -18,6 +20,8 @@ pub struct Task {
     pub id: i32,
     pub description: String,
     pub completed: bool,
+    pub points: i32,
+    pub user_id: i32
 }
 
 impl Task {

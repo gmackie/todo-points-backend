@@ -1,35 +1,15 @@
 use actix_files::NamedFile;
-use actix_session::Session;
 use actix_web::middleware::errhandlers::ErrorHandlerResponse;
 use actix_web::{dev, error, http, web, Error, HttpResponse, Result};
 use serde::Deserialize;
-use tera::{Context, Tera};
 
 use crate::db;
-use crate::session::{self, FlashMessage};
 
 pub async fn index(
     pool: web::Data<db::PgPool>,
-    tmpl: web::Data<Tera>,
-    session: Session,
 ) -> Result<HttpResponse, Error> {
     let tasks = web::block(move || db::get_all_tasks(&pool)).await?;
-
-    let mut context = Context::new();
-    context.insert("tasks", &tasks);
-
-    //Session is set during operations on other endpoints
-    //that can redirect to index
-    if let Some(flash) = session::get_flash(&session)? {
-        context.insert("msg", &(flash.kind, flash.message));
-        session::clear_flash(&session);
-    }
-
-    let rendered = tmpl
-        .render("index.html.tera", &context)
-        .map_err(error::ErrorInternalServerError)?;
-
-    Ok(HttpResponse::Ok().body(rendered))
+    Ok(HttpResponse::Ok().json(tasks))
 }
 
 #[derive(Deserialize)]
@@ -40,19 +20,15 @@ pub struct CreateForm {
 pub async fn create(
     params: web::Form<CreateForm>,
     pool: web::Data<db::PgPool>,
-    session: Session,
 ) -> Result<HttpResponse, Error> {
     if params.description.is_empty() {
-        session::set_flash(
-            &session,
-            FlashMessage::error("Description cannot be empty"),
-        )?;
-        Ok(redirect_to("/"))
+        Ok(HttpResponse::Ok().json("ERROR"))
     } else {
-        web::block(move || db::create_task(params.into_inner().description, &pool))
+        const points:i32 = 100;
+        const user_id:i32 = 1;
+        web::block(move || db::create_task(params.into_inner().description, points, user_id, &pool))
             .await?;
-        session::set_flash(&session, FlashMessage::success("Task successfully added"))?;
-        Ok(redirect_to("/"))
+        Ok(HttpResponse::Ok().json("ok."))
     }
 }
 
@@ -70,11 +46,10 @@ pub async fn update(
     db: web::Data<db::PgPool>,
     params: web::Path<UpdateParams>,
     form: web::Form<UpdateForm>,
-    session: Session,
 ) -> Result<HttpResponse, Error> {
     match form._method.as_ref() {
         "put" => toggle(db, params).await,
-        "delete" => delete(db, params, session).await,
+        "delete" => delete(db, params).await,
         unsupported_method => {
             let msg = format!("Unsupported HTTP method: {}", unsupported_method);
             Err(error::ErrorBadRequest(msg))
@@ -93,10 +68,8 @@ async fn toggle(
 async fn delete(
     pool: web::Data<db::PgPool>,
     params: web::Path<UpdateParams>,
-    session: Session,
 ) -> Result<HttpResponse, Error> {
     web::block(move || db::delete_task(params.id, &pool)).await?;
-    session::set_flash(&session, FlashMessage::success("Task was deleted."))?;
     Ok(redirect_to("/"))
 }
 

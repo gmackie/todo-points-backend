@@ -10,13 +10,11 @@ use actix_session::CookieSession;
 use actix_web::middleware::{errhandlers::ErrorHandlers, Logger};
 use actix_web::{http, web, App, HttpServer};
 use dotenv::dotenv;
-use tera::Tera;
 
 mod api;
 mod db;
 mod model;
 mod schema;
-mod session;
 
 static SESSION_SIGNING_KEY: &[u8] = &[0; 32];
 
@@ -33,8 +31,6 @@ async fn main() -> io::Result<()> {
     let app = move || {
         debug!("Constructing the App");
 
-        let templates: Tera = Tera::new("templates/**/*").unwrap();
-
         let session_store = CookieSession::signed(SESSION_SIGNING_KEY).secure(false);
 
         let error_handlers = ErrorHandlers::new()
@@ -46,7 +42,6 @@ async fn main() -> io::Result<()> {
             .handler(http::StatusCode::NOT_FOUND, api::not_found);
 
         App::new()
-            .data(templates)
             .data(pool.clone())
             .wrap(Logger::default())
             .wrap(session_store)
