@@ -11,9 +11,10 @@ use actix_web::middleware::{errhandlers::ErrorHandlers, Logger};
 use actix_web::{http, web, App, HttpServer};
 use dotenv::dotenv;
 
-mod api;
+mod tasks;
+use self::tasks::api as task_api;
 mod db;
-mod model;
+mod api;
 mod schema;
 
 static SESSION_SIGNING_KEY: &[u8] = &[0; 32];
@@ -46,9 +47,9 @@ async fn main() -> io::Result<()> {
             .wrap(Logger::default())
             .wrap(session_store)
             .wrap(error_handlers)
-            .service(web::resource("/").route(web::get().to(api::index)))
-            .service(web::resource("/todo").route(web::post().to(api::create)))
-            .service(web::resource("/todo/{id}").route(web::post().to(api::update)))
+            .service(web::resource("/todos").route(web::get().to(task_api::index)))
+            .service(web::resource("/todos").route(web::post().to(task_api::create)))
+            .service(web::resource("/todos/{id}").route(web::post().to(task_api::update)))
             .service(fs::Files::new("/static", "static/"))
     };
 
