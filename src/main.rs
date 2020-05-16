@@ -1,82 +1,78 @@
+#![allow(unused_must_use)]
+
+#[macro_use]
+extern crate actix_web;
+#[macro_use]
+extern crate log;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
-extern crate log;
+extern crate diesel_migrations;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
+extern crate actix_rt;
+extern crate actix_cors;
+extern crate env_logger;
+extern crate serde;
+extern crate dotenv;
+extern crate futures;
+extern crate failure;
+extern crate derive_more;
+extern crate jsonwebtoken;
+extern crate uuid;
+extern crate bcrypt;
 
-use std::{env, io};
-
-use actix_identity::{CookieIdentityPolicy, IdentityService};
-use actix_files as fs;
-use actix_session::CookieSession;
-use actix_web::middleware::{errhandlers::ErrorHandlers, Logger};
-use actix_web::{http, web, App, HttpServer};
-use dotenv::dotenv;
-
-mod tasks;
-use self::tasks::api as task_api;
-mod users;
-use self::users::api as user_api;
-mod errors;
-mod db;
 mod api;
+mod config;
+mod constants;
+mod error;
+mod middleware;
+mod models;
 mod schema;
+mod services;
 mod utils;
 
-static SESSION_SIGNING_KEY: &[u8] = &[0; 32];
+use actix_web::{http, HttpServer, App};
+use actix_service::Service;
+use futures::FutureExt;
+use std::{io, env};
+use std::default::Default;
+use actix_cors::Cors;
 
 #[actix_rt::main]
 async fn main() -> io::Result<()> {
-    dotenv().ok();
-
-    env::set_var("RUST_LOG", "escape-room-backend=debug,actix_web=info");
+    dotenv::dotenv().expect("Failed to read .env file");
+    env::set_var("RUST_LOG", "actix_web=debug");
     env_logger::init();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let pool = db::init_pool(&database_url).expect("Failed to create pool");
-    let domain: String =
-        std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
+    let app_host = env::var("APP_HOST").expect("APP_HOST not found.");
+    let app_port = env::var("APP_PORT").expect("APP_PORT not found.");
+    let app_url = format!("{}:{}", &app_host, &app_port);
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not found.");
 
+    let pool = config::db::migrate_and_config_db(&db_url);
 
-    let app = move || {
-        debug!("Constructing the App");
-
-        let session_store = CookieSession::signed(SESSION_SIGNING_KEY).secure(false);
-
-        let error_handlers = ErrorHandlers::new()
-            .handler(
-                http::StatusCode::INTERNAL_SERVER_ERROR,
-                api::internal_server_error,
-            )
-            .handler(http::StatusCode::BAD_REQUEST, api::bad_request)
-            .handler(http::StatusCode::NOT_FOUND, api::not_found);
-
+    HttpServer::new(move || {
         App::new()
+            .wrap(Cors::new() // allowed_origin return access-control-allow-origin: * by default
+                // .allowed_origin("http://127.0.0.1:8080")
+                .send_wildcard()
+                .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+                .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+                .allowed_header(http::header::CONTENT_TYPE)
+                .max_age(3600)
+                .finish())
             .data(pool.clone())
-            .wrap(Logger::default())
-            .wrap(IdentityService::new(
-                CookieIdentityPolicy::new(utils::SECRET_KEY.as_bytes())
-                    .name("auth")
-                    .path("/")
-                    .domain(domain.as_str())
-                    .max_age_time(chrono::Duration::days(1))
-                    .secure(false),
-            ))
-            .data(web::JsonConfig::default().limit(4096))
-            .wrap(session_store)
-            .wrap(error_handlers)
-            .service(
-                web::scope("/api")
-                    .service(web::resource("/").route(web::get().to(task_api::index)))
-                    .service(web::resource("/users").route(web::get().to(user_api::index)))
-                    .service(web::resource("/users").route(web::post().to(user_api::create)))
-                    .service(web::resource("/users/{id}").route(web::post().to(user_api::update)))
-                    .service(web::resource("/todos").route(web::get().to(task_api::index)))
-                    .service(web::resource("/todos").route(web::post().to(task_api::create)))
-                    .service(web::resource("/todos/{id}").route(web::post().to(task_api::update)))
-            )
-            .service(fs::Files::new("/static", "static/"))
-    };
-
-    debug!("Starting server");
-    HttpServer::new(app).bind("localhost:8080")?.run().await
+            .wrap(actix_web::middleware::Logger::default())
+            .wrap(crate::middleware::authen_middleware::Authentication)
+            .wrap_fn(|req, srv| {
+                srv.call(req).map(|res| res)
+            })
+            .configure(config::app::config_services)
+        })
+    .bind(&app_url)?
+    .run()
+    .await
 }
