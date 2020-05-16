@@ -1,41 +1,28 @@
+
 use std::ops::Deref;
 
-use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
+use crate::users::model::{NewUser, User};
+use crate::db::{get_conn, PgPool};
 
-use crate::model::{NewTask, Task};
 
-pub type PgPool = Pool<ConnectionManager<PgConnection>>;
-type PgPooledConnection = PooledConnection<ConnectionManager<PgConnection>>;
-
-pub fn init_pool(database_url: &str) -> Result<PgPool, PoolError> {
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
-    Pool::builder().build(manager)
+pub fn get_all_users(pool: &PgPool) -> Result<Vec<User>, &'static str> {
+    User::all(get_conn(pool)?.deref()).map_err(|_| "Error inserting user")
 }
 
-fn get_conn(pool: &PgPool) -> Result<PgPooledConnection, &'static str> {
-    pool.get().map_err(|_| "Can't get connection")
-}
-
-pub fn get_all_tasks(pool: &PgPool) -> Result<Vec<Task>, &'static str> {
-    Task::all(get_conn(pool)?.deref()).map_err(|_| "Error inserting task")
-}
-
-pub fn create_task(todo: String, pts: i32, u_id: i32, pool: &PgPool) -> Result<(), &'static str> {
-    let new_task = NewTask { description: todo, points: pts, user_id: u_id };
-    Task::insert(new_task, get_conn(pool)?.deref())
+pub fn create_user(new_user: NewUser, pool: &PgPool) -> Result<(), &'static str> {
+    User::insert(new_user, get_conn(pool)?.deref())
         .map(|_| ())
-        .map_err(|_| "Error inserting task")
+        .map_err(|_| "Error creating user")
 }
 
-pub fn toggle_task(id: i32, pool: &PgPool) -> Result<(), &'static str> {
-    Task::toggle_with_id(id, get_conn(pool)?.deref())
+pub fn add_points(id: i32, points: i32, pool: &PgPool) -> Result<(), &'static str> {
+    User::add_points(id, points, get_conn(pool)?.deref())
         .map(|_| ())
-        .map_err(|_| "Error inserting task")
+        .map_err(|_| "Error adding points to user")
 }
 
-pub fn delete_task(id: i32, pool: &PgPool) -> Result<(), &'static str> {
-    Task::delete_with_id(id, get_conn(pool)?.deref())
+pub fn delete_user(id: i32, pool: &PgPool) -> Result<(), &'static str> {
+    User::delete_with_id(id, get_conn(pool)?.deref())
         .map(|_| ())
-        .map_err(|_| "Error inserting task")
+        .map_err(|_| "Error deleting user")
 }

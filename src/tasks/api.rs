@@ -1,14 +1,15 @@
 use actix_web::{error, web, Error, HttpResponse, Result};
 use serde::Deserialize;
 
-use crate::tasks::db;
+use crate::db;
+use crate::tasks::db as tasks_db;
 use crate::tasks::model::{NewTask};
 use crate::api::{redirect_to};
 
 pub async fn index(
     pool: web::Data<db::PgPool>,
 ) -> Result<HttpResponse, Error> {
-    let tasks = web::block(move || db::get_all_tasks(&pool)).await?;
+    let tasks = web::block(move || tasks_db::get_all_tasks(&pool)).await?;
     Ok(HttpResponse::Ok().json(tasks))
 }
 
@@ -23,7 +24,7 @@ pub async fn create(
         let description:String = inner_params.description;
         let points:i32 = inner_params.points;
         let user_id:i32 = inner_params.user_id;
-        web::block(move || db::create_task(description, points, user_id, &pool))
+        web::block(move || tasks_db::create_task(description, points, user_id, &pool))
             .await?;
         Ok(HttpResponse::Ok().json("ok."))
     }
@@ -58,7 +59,7 @@ async fn toggle(
     pool: web::Data<db::PgPool>,
     params: web::Path<UpdateParams>,
 ) -> Result<HttpResponse, Error> {
-    web::block(move || db::toggle_task(params.id, &pool)).await?;
+    web::block(move || tasks_db::toggle_task(params.id, &pool)).await?;
     Ok(redirect_to("/"))
 }
 
@@ -66,6 +67,6 @@ async fn delete(
     pool: web::Data<db::PgPool>,
     params: web::Path<UpdateParams>,
 ) -> Result<HttpResponse, Error> {
-    web::block(move || db::delete_task(params.id, &pool)).await?;
+    web::block(move || tasks_db::delete_task(params.id, &pool)).await?;
     Ok(redirect_to("/"))
 }

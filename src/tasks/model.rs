@@ -12,7 +12,9 @@ use crate::schema::{
 pub struct NewTask {
     pub description: String,
     pub points: i32,
-    pub user_id: i32
+    pub user_id: i32,
+    pub created_at: chrono::NaiveDateTime,
+    pub due_by: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Debug, Queryable, Serialize)]
@@ -21,7 +23,10 @@ pub struct Task {
     pub description: String,
     pub completed: bool,
     pub points: i32,
-    pub user_id: i32
+    pub user_id: i32,
+    pub created_at: chrono::NaiveDateTime,
+    pub due_by: Option<chrono::NaiveDateTime>,
+    pub completed_at: Option<chrono::NaiveDateTime>,
 }
 
 impl Task {
