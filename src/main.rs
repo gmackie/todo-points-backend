@@ -34,7 +34,8 @@ mod schema;
 mod services;
 mod utils;
 
-use actix_web::{http, HttpServer, App};
+use actix_identity::{IdentityService, CookieIdentityPolicy};
+use actix_web::{http, HttpServer, App, web::JsonConfig};
 use actix_service::Service;
 use futures::FutureExt;
 use std::{io, env};
@@ -44,7 +45,7 @@ use actix_cors::Cors;
 #[actix_rt::main]
 async fn main() -> io::Result<()> {
     dotenv::dotenv().expect("Failed to read .env file");
-    env::set_var("RUST_LOG", "actix_web=debug");
+    env::set_var("RUST_LOG", "info,actix_web=debug");
     env_logger::init();
 
     let app_host = env::var("APP_HOST").expect("APP_HOST not found.");
@@ -66,6 +67,16 @@ async fn main() -> io::Result<()> {
                 .finish())
             .data(pool.clone())
             .wrap(actix_web::middleware::Logger::default())
+            .wrap(IdentityService::new(
+                CookieIdentityPolicy::new(&models::user_token::KEY)
+                    .name("auth")
+                    .path("/")
+                    .domain(app_host.as_str())
+                    .max_age_time(chrono::Duration::days(1))
+                    .secure(false), // this can only be true if you have https
+            ))
+            // limit the maximum amount of data that server will accept
+            .data(JsonConfig::default().limit(4096))
             .wrap(crate::middleware::authen_middleware::Authentication)
             .wrap_fn(|req, srv| {
                 srv.call(req).map(|res| res)

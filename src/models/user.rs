@@ -7,6 +7,7 @@ use crate::{
     },
     schema::users::{self, dsl::*},
 };
+use chrono::{DateTime, Utc};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use diesel::prelude::*;
 use uuid::Uuid;
@@ -17,7 +18,15 @@ pub struct User {
     pub username: String,
     pub email: String,
     pub password: String,
+    pub created_at: DateTime<Utc>,
     pub login_session: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RegUserDTO {
+    pub username: String,
+    pub email: String,
+    pub password: String,
 }
 
 #[derive(Insertable, Serialize, Deserialize)]
@@ -26,6 +35,7 @@ pub struct UserDTO {
     pub username: String,
     pub email: String,
     pub password: String,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -42,12 +52,15 @@ pub struct LoginInfoDTO {
 }
 
 impl User {
-    pub fn signup(user: UserDTO, conn: &Connection) -> Result<String, String> {
+    pub fn signup(user: RegUserDTO, conn: &Connection) -> Result<String, String> {
         if Self::find_user_by_username(&user.username, conn).is_err() {
             let hashed_pwd = hash(&user.password, DEFAULT_COST).unwrap();
             let user = UserDTO {
+                username: user.username,
+                email: user.email,
                 password: hashed_pwd,
-                ..user
+                created_at: chrono::Utc::now(),
+                
             };
             diesel::insert_into(users)
                 .values(&user)

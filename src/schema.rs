@@ -13,9 +13,9 @@ table! {
         completed -> Bool,
         points -> Int4,
         user_id -> Int4,
-        created_at -> Timestamp,
-        due_by -> Nullable<Timestamp>,
-        completed_at -> Nullable<Timestamp>,
+        created_at -> Timestamptz,
+        due_by -> Nullable<Timestamptz>,
+        completed_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -25,6 +25,7 @@ table! {
         username -> Varchar,
         email -> Varchar,
         password -> Varchar,
+        created_at -> Timestamptz,
         login_session -> Varchar,
     }
 }

@@ -2,7 +2,7 @@ use crate::{
     config::db::Pool,
     constants,
     error::ServiceError,
-    models::user::{User, UserDTO, LoginDTO},
+    models::user::{User, RegUserDTO, LoginDTO},
     models::user_token::UserToken,
     utils::token_utils,
 };
@@ -13,6 +13,7 @@ use actix_web::{
     },
     web,
 };
+use actix_identity::Identity;
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenBodyResponse {
@@ -20,17 +21,19 @@ pub struct TokenBodyResponse {
     pub token_type: String,
 }
 
-pub fn signup(user: UserDTO, pool: &web::Data<Pool>) -> Result<String, ServiceError> {
+pub fn signup(user: RegUserDTO, pool: &web::Data<Pool>) -> Result<String, ServiceError> {
     match User::signup(user, &pool.get().unwrap()) {
         Ok(message) => Ok(message),
         Err(message) => Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, message))
     }
 }
 
-pub fn login(login: LoginDTO, pool: &web::Data<Pool>) -> Result<TokenBodyResponse, ServiceError> {
+pub fn login(login: LoginDTO, ident: Identity, pool: &web::Data<Pool>) -> Result<TokenBodyResponse, ServiceError> {
     match User::login(login, &pool.get().unwrap()) {
         Some(logged_user) => {
-            match serde_json::from_value(json!({ "token": UserToken::generate_token(logged_user), "token_type": "bearer" })) {
+            let token = UserToken::generate_token(logged_user);
+            ident.remember(token.clone());
+            match serde_json::from_value(json!({ "token": token, "token_type": "bearer" })) {
                 Ok(token_res) => Ok(token_res),
                 Err(_) => Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_INTERNAL_SERVER_ERROR.to_string()))
             }
@@ -39,7 +42,7 @@ pub fn login(login: LoginDTO, pool: &web::Data<Pool>) -> Result<TokenBodyRespons
     }
 }
 
-pub fn logout(authen_header: &HeaderValue, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
+pub fn logout(authen_header: &HeaderValue, ident: Identity, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
     if let Ok(authen_str) = authen_header.to_str() {
         if authen_str.starts_with("bearer") {
             let token = authen_str[6..authen_str.len()].trim();
@@ -52,7 +55,9 @@ pub fn logout(authen_header: &HeaderValue, pool: &web::Data<Pool>) -> Result<(),
                 }
             }
         }
+        return Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_PROCESS_TOKEN_ERROR.to_string()));
     }
 
-    Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_PROCESS_TOKEN_ERROR.to_string()))
+    ident.forget();
+    Ok(())
 }
