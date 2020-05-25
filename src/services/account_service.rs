@@ -13,7 +13,6 @@ use actix_web::{
     },
     web,
 };
-use actix_identity::Identity;
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenBodyResponse {
@@ -28,11 +27,10 @@ pub fn signup(user: RegUserDTO, pool: &web::Data<Pool>) -> Result<String, Servic
     }
 }
 
-pub fn login(login: LoginDTO, ident: Identity, pool: &web::Data<Pool>) -> Result<TokenBodyResponse, ServiceError> {
+pub fn login(login: LoginDTO, pool: &web::Data<Pool>) -> Result<TokenBodyResponse, ServiceError> {
     match User::login(login, &pool.get().unwrap()) {
         Some(logged_user) => {
             let token = UserToken::generate_token(logged_user);
-            ident.remember(token.clone());
             match serde_json::from_value(json!({ "token": token, "token_type": "bearer" })) {
                 Ok(token_res) => Ok(token_res),
                 Err(_) => Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_INTERNAL_SERVER_ERROR.to_string()))
@@ -42,7 +40,7 @@ pub fn login(login: LoginDTO, ident: Identity, pool: &web::Data<Pool>) -> Result
     }
 }
 
-pub fn logout(authen_header: &HeaderValue, ident: Identity, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
+pub fn logout(authen_header: &HeaderValue, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
     if let Ok(authen_str) = authen_header.to_str() {
         if authen_str.starts_with("bearer") {
             let token = authen_str[6..authen_str.len()].trim();
@@ -58,6 +56,5 @@ pub fn logout(authen_header: &HeaderValue, ident: Identity, pool: &web::Data<Poo
         return Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_PROCESS_TOKEN_ERROR.to_string()));
     }
 
-    ident.forget();
     Ok(())
 }

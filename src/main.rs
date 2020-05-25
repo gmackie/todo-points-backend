@@ -34,7 +34,6 @@ mod schema;
 mod services;
 mod utils;
 
-use actix_identity::{IdentityService, CookieIdentityPolicy};
 use actix_web::{http, HttpServer, App, web::JsonConfig};
 use actix_service::Service;
 use futures::FutureExt;
@@ -67,14 +66,6 @@ async fn main() -> io::Result<()> {
                 .finish())
             .data(pool.clone())
             .wrap(actix_web::middleware::Logger::default())
-            .wrap(IdentityService::new(
-                CookieIdentityPolicy::new(&models::user_token::KEY)
-                    .name("auth")
-                    .path("/")
-                    .domain(app_host.as_str())
-                    .max_age_time(chrono::Duration::days(1))
-                    .secure(false), // this can only be true if you have https
-            ))
             // limit the maximum amount of data that server will accept
             .data(JsonConfig::default().limit(4096))
             .wrap(crate::middleware::authen_middleware::Authentication)

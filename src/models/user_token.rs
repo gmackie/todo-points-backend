@@ -5,7 +5,7 @@ use jsonwebtoken::{
     Header
 };
 
-pub static KEY: [u8; 32] = *include_bytes!("../secret.key");
+pub static KEY: [u8; 16] = *include_bytes!("../secret.key");
 static ONE_WEEK: i64 = 60 * 60 * 24 * 7; // in seconds
 
 #[derive(Serialize, Deserialize)]

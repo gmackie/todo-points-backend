@@ -14,7 +14,6 @@ use std::{
     task::{Context, Poll},
 };
 use actix_web::http::header::{HeaderName, HeaderValue};
-use actix_identity::RequestIdentity;
 use log::info;
 
 pub struct Authentication;
@@ -89,21 +88,6 @@ where
                                 }
                             }
                         }
-                    }
-                    else if let Some(token) = req.get_identity() {
-                        info!("Parsing identity from cookie");
-                        if let Ok(token_data) = token_utils::decode_token(token) {
-                            info!("Decoding token...");
-                            if token_utils::verify_token(&token_data, &pool).is_ok() {
-                                info!("Valid token");
-                                authenticate_pass = true;
-                            } else {
-                                error!("Invalid token");
-                            }
-                        }
-                    }
-                    else {
-                        info!("No Auth :(")
                     }
                 }
             }
