@@ -29,10 +29,17 @@ pub fn config_services(cfg: &mut web::ServiceConfig) {
                             .route(web::post().to(task_controller::insert))
                     )
                     .service(
-                        web::resource("/{id}")
-                            .route(web::get().to(task_controller::find_by_id))
-                            .route(web::put().to(task_controller::update))
-                            .route(web::delete().to(task_controller::delete))
+                        web::scope("/{id}")
+                            .service(
+                                web::resource("")
+                                    .route(web::get().to(task_controller::find_by_id))
+                                    .route(web::put().to(task_controller::update))
+                                    .route(web::delete().to(task_controller::delete))
+                            )
+                            .service(
+                                web::resource("complete")
+                                    .route(web::post().to(task_controller::complete))
+                            )
                     )
                     .service(
                         web::resource("/query/{query}")

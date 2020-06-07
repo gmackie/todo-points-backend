@@ -49,6 +49,14 @@ pub async fn update(id: web::Path<String>, updated_task: web::Json<TaskDTO>, poo
     }
 }
 
+// POST api/tasks/{id}/complete
+pub async fn complete(id: web::Path<String>, pool: web::Data<Pool>) -> Result<HttpResponse> {
+    match task_service::complete(id.into_inner().parse::<i32>().unwrap(), &pool) {
+        Ok(()) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY))),
+        Err(err) => Ok(err.response()),
+    }
+}
+
 // DELETE api/tasks/{id}
 pub async fn delete(id: web::Path<String>, pool: web::Data<Pool>) -> Result<HttpResponse> {
     match task_service::delete(id.into_inner().parse::<i32>().unwrap(), &pool) {
