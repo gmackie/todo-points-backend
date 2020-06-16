@@ -2,65 +2,65 @@ use crate::{
     config::db::Pool,
     constants,
     models::{
-        task::TaskDTO,
+        todo::TodoDTO,
         response::ResponseBody,
     },
-    services::task_service,
+    services::todo_service,
 };
 use actix_web::{web, HttpResponse, Result};
 
-// GET api/tasks
+// GET api/todos
 pub async fn find_all(pool: web::Data<Pool>) -> Result<HttpResponse> {
-    match task_service::find_all(&pool) {
+    match todo_service::find_all(&pool) {
         Ok(people) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, people))),
         Err(err) => Ok(err.response()),
     }
 }
 
-// GET api/tasks/{id}
+// GET api/todos/{id}
 pub async fn find_by_id(id: web::Path<String>, pool: web::Data<Pool>) -> Result<HttpResponse> {
-    match task_service::find_by_id(id.into_inner().parse::<i32>().unwrap(), &pool) {
-        Ok(task) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, task))),
+    match todo_service::find_by_id(id.into_inner().parse::<i32>().unwrap(), &pool) {
+        Ok(todo) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, todo))),
         Err(err) => Ok(err.response()),
     }
 }
 
-// GET api/tasks/query/{query}
+// GET api/todos/query/{query}
 pub async fn query(query: web::Path<String>, pool: web::Data<Pool>) -> Result<HttpResponse> {
-    match task_service::query(query.into_inner(), &pool) {
+    match todo_service::query(query.into_inner(), &pool) {
         Ok(people) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, people))),
         Err(err) => Ok(err.response()),
     }
 }
 
-// POST api/tasks
-pub async fn insert(new_task: web::Json<TaskDTO>, pool: web::Data<Pool>) -> Result<HttpResponse> {
-    match task_service::insert(new_task.0, &pool) {
+// POST api/todos
+pub async fn insert(new_todo: web::Json<TodoDTO>, pool: web::Data<Pool>) -> Result<HttpResponse> {
+    match todo_service::insert(new_todo.0, &pool) {
         Ok(()) => Ok(HttpResponse::Created().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY))),
         Err(err) => Ok(err.response()),
     }
 }
 
-// PUT api/tasks/{id}
-pub async fn update(id: web::Path<String>, updated_task: web::Json<TaskDTO>, pool: web::Data<Pool>) -> Result<HttpResponse> {
-    match task_service::update(id.into_inner().parse::<i32>().unwrap(), updated_task.0, &pool) {
+// PUT api/todos/{id}
+pub async fn update(id: web::Path<String>, updated_todo: web::Json<TodoDTO>, pool: web::Data<Pool>) -> Result<HttpResponse> {
+    match todo_service::update(id.into_inner().parse::<i32>().unwrap(), updated_todo.0, &pool) {
         Ok(()) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY))),
         Err(err) => Ok(err.response()),
     }
 }
 
-// POST api/tasks/{id}/complete
+// POST api/todos/{id}/complete
 pub async fn complete(_id: web::Path<String>, _pool: web::Data<Pool>) -> Result<HttpResponse> {
-    // match task_service::complete(id.into_inner().parse::<i32>().unwrap(), &pool) {
+    // match todo_service::complete(id.into_inner().parse::<i32>().unwrap(), &pool) {
     //     Ok(()) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY))),
     //     Err(err) => Ok(err.response()),
     // }
     Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY)))
 }
 
-// DELETE api/tasks/{id}
+// DELETE api/todos/{id}
 pub async fn delete(id: web::Path<String>, pool: web::Data<Pool>) -> Result<HttpResponse> {
-    match task_service::delete(id.into_inner().parse::<i32>().unwrap(), &pool) {
+    match todo_service::delete(id.into_inner().parse::<i32>().unwrap(), &pool) {
         Ok(()) => Ok(HttpResponse::Ok().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY))),
         Err(err) => Ok(err.response()),
     }

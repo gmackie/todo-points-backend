@@ -9,12 +9,9 @@ use chrono::Utc;
 pub struct Task {
     pub id: i32,
     pub description: String,
-    pub completed: bool,
     pub points: i32,
     pub user_id: i32,
     pub created_at: chrono::DateTime<Utc>,
-    pub due_by: Option<chrono::DateTime<Utc>>,
-    pub completed_at: Option<chrono::DateTime<Utc>>,
 }
 
 #[derive(Insertable, Serialize, Deserialize)]
@@ -24,7 +21,6 @@ pub struct NewTask {
     pub points: i32,
     pub user_id: i32,
     pub created_at: chrono::DateTime<Utc>,
-    pub due_by: Option<chrono::DateTime<Utc>>,
 }
 
 
@@ -32,11 +28,8 @@ pub struct NewTask {
 #[table_name = "tasks"]
 pub struct TaskDTO {
     pub description: String,
-    pub completed: Option<bool>,
     pub points: i32,
     pub user_id: i32,
-    pub due_by: Option<chrono::DateTime<Utc>>,
-    pub completed_at: Option<chrono::DateTime<Utc>>,
 }
 
 impl Task {
@@ -58,7 +51,6 @@ impl Task {
             points: task.points,
             user_id: task.user_id,
             created_at: Utc::now(),
-            due_by: task.due_by,
         };
         diesel::insert_into(tasks)
             .values(&new_task)
@@ -68,20 +60,6 @@ impl Task {
     pub fn update(i: i32, updated_task: TaskDTO, conn: &Connection) -> QueryResult<usize> {
         diesel::update(tasks.find(i))
             .set(&updated_task)
-            .execute(conn)
-    }
-
-    pub fn complete(i: i32, conn: &Connection) -> QueryResult<usize> {
-        let task = tasks.find(i).get_result::<Task>(conn)?;
-
-        let new_status = !task.completed;
-        let new_completed_at = if new_status { Some(Utc::now()) } else { None };
-
-        diesel::update(tasks.find(i))
-            .set((
-                completed.eq(new_status),
-                completed_at.eq(new_completed_at),
-            ))
             .execute(conn)
     }
 

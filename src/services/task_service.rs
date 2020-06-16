@@ -46,15 +46,15 @@ pub fn update(id: i32, updated_task: TaskDTO, pool: &web::Data<Pool>) -> Result<
     }
 }
 
-pub fn complete(id: i32, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
-    match Task::find_by_id(id, &pool.get().unwrap()) {
-        Ok(_) => match Task::complete(id, &pool.get().unwrap()) {
-            Ok(_) => Ok(()),
-            Err(_) => Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_CAN_NOT_UPDATE_DATA.to_string())),
-        },
-        Err(_) => Err(ServiceError::new(StatusCode::NOT_FOUND, format!("Task with id {} not found", id))),
-    }
-}
+// pub fn complete(id: i32, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
+//     match Task::find_by_id(id, &pool.get().unwrap()) {
+//         Ok(_) => match Task::complete(id, &pool.get().unwrap()) {
+//             Ok(_) => Ok(()),
+//             Err(_) => Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_CAN_NOT_UPDATE_DATA.to_string())),
+//         },
+//         Err(_) => Err(ServiceError::new(StatusCode::NOT_FOUND, format!("Task with id {} not found", id))),
+//     }
+// }
 
 pub fn delete(id: i32, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
     match Task::find_by_id(id, &pool.get().unwrap()) {
