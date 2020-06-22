@@ -22,6 +22,26 @@ pub fn config_services(cfg: &mut web::ServiceConfig) {
                     )
             )
             .service(
+                web::scope("/labels")
+                    .service(
+                        web::resource("")
+                            .route(web::get().to(label_controller::find_all))
+                            .route(web::post().to(label_controller::insert))
+                    )
+                    .service(
+                        web::scope("/{id}")
+                            .service(
+                                web::resource("")
+                                    .route(web::get().to(label_controller::find_by_id))
+                                    .route(web::delete().to(label_controller::delete))
+                            )
+                    )
+                    .service(
+                        web::resource("/query/{query}")
+                            .route(web::get().to(label_controller::query))   
+                    )
+            )
+            .service(
                 web::scope("/tasks")
                     .service(
                         web::resource("")
@@ -44,6 +64,31 @@ pub fn config_services(cfg: &mut web::ServiceConfig) {
                     .service(
                         web::resource("/query/{query}")
                             .route(web::get().to(task_controller::query))   
+                    )
+            )
+            .service(
+                web::scope("/todos")
+                    .service(
+                        web::resource("")
+                            .route(web::get().to(todo_controller::find_all))
+                            .route(web::post().to(todo_controller::insert))
+                    )
+                    .service(
+                        web::scope("/{id}")
+                            .service(
+                                web::resource("")
+                                    .route(web::get().to(todo_controller::find_by_id))
+                                    .route(web::put().to(todo_controller::update))
+                                    .route(web::delete().to(todo_controller::delete))
+                            )
+                            .service(
+                                web::resource("complete")
+                                    .route(web::post().to(todo_controller::complete))
+                            )
+                    )
+                    .service(
+                        web::resource("/query/{query}")
+                            .route(web::get().to(todo_controller::query))   
                     )
             )
     );

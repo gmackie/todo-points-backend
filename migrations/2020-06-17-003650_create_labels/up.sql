@@ -1,6 +1,7 @@
 CREATE TABLE labels (
   id SERIAL PRIMARY KEY,
   name VARCHAR NOT NULL,
+  color VARCHAR NOT NULL,
   created_by INT NOT NULL REFERENCES users (id),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
