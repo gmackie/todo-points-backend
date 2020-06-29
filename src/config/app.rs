@@ -22,6 +22,46 @@ pub fn config_services(cfg: &mut web::ServiceConfig) {
                     )
             )
             .service(
+                web::scope("/balances")
+                    .service(
+                        web::resource("")
+                            .route(web::get().to(balance_controller::find_all))
+                            .route(web::post().to(balance_controller::insert))
+                    )
+                    .service(
+                        web::scope("/{id}")
+                            .service(
+                                web::resource("")
+                                    .route(web::get().to(balance_controller::find_by_id))
+                                    .route(web::delete().to(balance_controller::delete))
+                            )
+                    )
+                    .service(
+                        web::resource("/query/{query}")
+                            .route(web::get().to(balance_controller::query))   
+                    )
+            )
+            .service(
+                web::scope("/completions")
+                    .service(
+                        web::resource("")
+                            .route(web::get().to(completion_controller::find_all))
+                            .route(web::post().to(completion_controller::insert))
+                    )
+                    .service(
+                        web::scope("/{id}")
+                            .service(
+                                web::resource("")
+                                    .route(web::get().to(completion_controller::find_by_id))
+                                    .route(web::delete().to(completion_controller::delete))
+                            )
+                    )
+                    .service(
+                        web::resource("/query/{query}")
+                            .route(web::get().to(completion_controller::query))   
+                    )
+            )
+            .service(
                 web::scope("/labels")
                     .service(
                         web::resource("")
