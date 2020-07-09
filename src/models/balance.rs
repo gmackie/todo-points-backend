@@ -8,28 +8,28 @@ use crate::{
   #[derive(Queryable, Serialize, Deserialize)]
   pub struct Balance {
     pub id: i32,
-    pub name: String,
-    pub color: String,
     pub user_id: i32,
-    pub created_at: chrono::DateTime<Utc>,
+    pub label_id: i32,
+    pub points: i32,
+    pub updated_at: chrono::DateTime<Utc>,
   }
   
   #[derive(Insertable, Serialize, Deserialize)]
   #[table_name = "balances"]
   pub struct NewBalance {
-    pub name: String,
-    pub color: String,
-    pub created_by: i32,
-    pub created_at: chrono::DateTime<Utc>,
+    pub user_id: i32,
+    pub label_id: i32,
+    pub points: i32,
+    pub updated_at: chrono::DateTime<Utc>,
   }
   
   
   #[derive(AsChangeset, Serialize, Deserialize)]
   #[table_name = "balances"]
   pub struct BalanceDTO {
-    pub name: String,
-    pub color: String,
-    pub created_by: i32,
+    pub user_id: i32,
+    pub label_id: i32,
+    pub points: i32,
   }
   
   impl Balance {
@@ -47,10 +47,10 @@ use crate::{
   
     pub fn insert(balance: BalanceDTO, conn: &Connection) -> QueryResult<usize> {
         let new_balance = NewBalance {
-            name: balance.name,
-            color: balance.color,
-            created_by: balance.created_by,
-            created_at: Utc::now(),
+            user_id: balance.user_id,
+            label_id: balance.label_id,
+            points: balance.points,
+            updated_at: Utc::now(),
         };
         diesel::insert_into(balances)
             .values(&new_balance)

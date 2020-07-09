@@ -1,17 +1,17 @@
 table! {
-    completed_tasks (id) {
+    balances (id) {
         id -> Int4,
-        task_id -> Int4,
-        completed_at -> Timestamptz,
         user_id -> Int4,
+        label_id -> Int4,
         points -> Int4,
+        updated_at -> Timestamptz,
     }
 }
 
 table! {
-    completed_todos (id) {
+    completed_tasks (id) {
         id -> Int4,
-        todo_id -> Int4,
+        task_id -> Int4,
         completed_at -> Timestamptz,
         user_id -> Int4,
         points -> Int4,
@@ -88,10 +88,10 @@ table! {
     }
 }
 
+joinable!(balances -> labels (label_id));
+joinable!(balances -> users (user_id));
 joinable!(completed_tasks -> tasks (task_id));
 joinable!(completed_tasks -> users (user_id));
-joinable!(completed_todos -> todos (todo_id));
-joinable!(completed_todos -> users (user_id));
 joinable!(labels -> users (created_by));
 joinable!(login_history -> users (user_id));
 joinable!(task_labels -> labels (label_id));
@@ -104,8 +104,8 @@ joinable!(todo_labels -> users (created_by));
 joinable!(todos -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
+    balances,
     completed_tasks,
-    completed_todos,
     labels,
     login_history,
     task_labels,

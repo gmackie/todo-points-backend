@@ -6,10 +6,10 @@ CREATE TABLE completed_tasks (
   points INT NOT NULL DEFAULT 0
 );
 
-CREATE TABLE completed_todos (
+CREATE TABLE balances (
   id SERIAL PRIMARY KEY,
-  todo_id INT NOT NULL REFERENCES todos (id),
-  completed_at TIMESTAMP WITH TIME ZONE NOT NULL,
   user_id INT NOT NULL REFERENCES users (id),
-  points INT NOT NULL DEFAULT 0
+  label_id INT NOT NULL REFERENCES labels (id),
+  points INT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
