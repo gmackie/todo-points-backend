@@ -19,6 +19,16 @@ table! {
 }
 
 table! {
+    groups (id) {
+        id -> Int4,
+        group_name -> Varchar,
+        description -> Varchar,
+        created_at -> Timestamptz,
+        created_by -> Int4,
+    }
+}
+
+table! {
     labels (id) {
         id -> Int4,
         name -> Varchar,
@@ -33,6 +43,24 @@ table! {
         id -> Int4,
         user_id -> Int4,
         login_timestamp -> Timestamptz,
+    }
+}
+
+table! {
+    points (id) {
+        id -> Int4,
+        user_id -> Int4,
+        value -> Int4,
+    }
+}
+
+table! {
+    points_audit (id) {
+        id -> Int4,
+        user_id -> Int4,
+        value -> Int4,
+        description -> Nullable<Varchar>,
+        deposit_at -> Timestamptz,
     }
 }
 
@@ -88,12 +116,24 @@ table! {
     }
 }
 
+table! {
+    users_groups (id) {
+        id -> Int4,
+        user_id -> Int4,
+        group_id -> Int4,
+        created_at -> Timestamptz,
+    }
+}
+
 joinable!(balances -> labels (label_id));
 joinable!(balances -> users (user_id));
 joinable!(completed_tasks -> tasks (task_id));
 joinable!(completed_tasks -> users (user_id));
+joinable!(groups -> users (created_by));
 joinable!(labels -> users (created_by));
 joinable!(login_history -> users (user_id));
+joinable!(points -> users (user_id));
+joinable!(points_audit -> users (user_id));
 joinable!(task_labels -> labels (label_id));
 joinable!(task_labels -> tasks (task_id));
 joinable!(task_labels -> users (created_by));
@@ -102,15 +142,21 @@ joinable!(todo_labels -> labels (label_id));
 joinable!(todo_labels -> todos (todo_id));
 joinable!(todo_labels -> users (created_by));
 joinable!(todos -> users (user_id));
+joinable!(users_groups -> groups (group_id));
+joinable!(users_groups -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     balances,
     completed_tasks,
+    groups,
     labels,
     login_history,
+    points,
+    points_audit,
     task_labels,
     tasks,
     todo_labels,
     todos,
     users,
+    users_groups,
 );
