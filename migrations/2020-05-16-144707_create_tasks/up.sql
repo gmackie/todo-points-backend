@@ -3,5 +3,7 @@ CREATE TABLE tasks (
   description VARCHAR NOT NULL,
   points INT NOT NULL,
   user_id INT NOT NULL REFERENCES users (id),
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  completed BOOLEAN NOT NULL DEFAULT false,
+  completed_at TIMESTAMP WITH TIME ZONE
 );

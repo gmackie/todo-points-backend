@@ -5,5 +5,4 @@ pub mod login_history;
 pub mod task;
 pub mod todo;
 pub mod label;
-pub mod completion;
 pub mod balance;

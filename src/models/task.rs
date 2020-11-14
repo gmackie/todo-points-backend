@@ -12,17 +12,26 @@ pub struct Task {
     pub points: i32,
     pub user_id: i32,
     pub created_at: chrono::DateTime<Utc>,
+    pub completed: bool,
+    pub completed_at: Option<chrono::DateTime<Utc>>,
 }
 
-#[derive(Insertable, Serialize, Deserialize)]
-#[table_name = "tasks"]
+#[derive(Serialize, Deserialize)]
 pub struct NewTask {
     pub description: String,
     pub points: i32,
     pub user_id: i32,
-    pub created_at: chrono::DateTime<Utc>,
 }
 
+#[derive(Insertable, Serialize, Deserialize)]
+#[table_name = "tasks"]
+pub struct NewDbTask {
+    pub description: String,
+    pub points: i32,
+    pub user_id: i32,
+    pub created_at: chrono::DateTime<Utc>,
+    pub completed: bool,
+}
 
 #[derive(AsChangeset, Serialize, Deserialize)]
 #[table_name = "tasks"]
@@ -30,6 +39,8 @@ pub struct TaskDTO {
     pub description: String,
     pub points: i32,
     pub user_id: i32,
+    pub completed: bool,
+    pub completed_at: Option<chrono::DateTime<Utc>>,
 }
 
 impl Task {
@@ -45,12 +56,13 @@ impl Task {
         tasks.order(id.asc()).load::<Task>(conn)
     }
 
-    pub fn insert(task: TaskDTO, conn: &Connection) -> QueryResult<usize> {
-        let new_task = NewTask {
+    pub fn insert(task: NewTask, conn: &Connection) -> QueryResult<usize> {
+        let new_task = NewDbTask {
             description: task.description,
             points: task.points,
             user_id: task.user_id,
             created_at: Utc::now(),
+            completed: false,
         };
         diesel::insert_into(tasks)
             .values(&new_task)

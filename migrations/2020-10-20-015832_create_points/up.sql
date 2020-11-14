@@ -2,7 +2,8 @@
 CREATE TABLE points (
     id SERIAL PRIMARY KEY NOT NULL,
     user_id INT NOT NULL REFERENCES users (id),
-    value INT NOT NULL DEFAULT 0
+    value INT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE points_audit (
@@ -10,5 +11,5 @@ CREATE TABLE points_audit (
     user_id INT NOT NULL REFERENCES users (id),
     value INT NOT NULL DEFAULT 0,
     description VARCHAR,
-    deposit_at TIMESTAMP WITH TIME ZONE NOT NULL 
+    deposit_at TIMESTAMP WITH TIME ZONE NOT NULL
 );

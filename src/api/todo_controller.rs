@@ -3,6 +3,7 @@ use crate::{
     constants,
     models::{
         todo::TodoDTO,
+        todo::NewTodo,
         response::ResponseBody,
     },
     services::todo_service,
@@ -34,7 +35,7 @@ pub async fn query(query: web::Path<String>, pool: web::Data<Pool>) -> Result<Ht
 }
 
 // POST api/todos
-pub async fn insert(new_todo: web::Json<TodoDTO>, pool: web::Data<Pool>) -> Result<HttpResponse> {
+pub async fn insert(new_todo: web::Json<NewTodo>, pool: web::Data<Pool>) -> Result<HttpResponse> {
     match todo_service::insert(new_todo.0, &pool) {
         Ok(()) => Ok(HttpResponse::Created().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY))),
         Err(err) => Ok(err.response()),

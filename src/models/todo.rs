@@ -12,16 +12,27 @@ pub struct Todo {
     pub points: i32,
     pub user_id: i32,
     pub created_at: chrono::DateTime<Utc>,
+    pub completed: bool,
+    pub completed_at: Option<chrono::DateTime<Utc>>,
     pub due_by: Option<chrono::DateTime<Utc>>,
 }
 
 #[derive(Insertable, Serialize, Deserialize)]
 #[table_name = "todos"]
-pub struct NewTodo {
+pub struct NewDbTodo {
     pub description: String,
     pub points: i32,
     pub user_id: i32,
     pub created_at: chrono::DateTime<Utc>,
+    pub completed: bool,
+    pub due_by: Option<chrono::DateTime<Utc>>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NewTodo {
+    pub description: String,
+    pub points: i32,
+    pub user_id: i32,
     pub due_by: Option<chrono::DateTime<Utc>>,
 }
 
@@ -33,6 +44,8 @@ pub struct TodoDTO {
     pub points: i32,
     pub user_id: i32,
     pub due_by: Option<chrono::DateTime<Utc>>,
+    pub completed: bool,
+    pub completed_at: Option<chrono::DateTime<Utc>>,
 }
 
 impl Todo {
@@ -48,13 +61,14 @@ impl Todo {
         todos.order(id.asc()).load::<Todo>(conn)
     }
 
-    pub fn insert(todo: TodoDTO, conn: &Connection) -> QueryResult<usize> {
-        let new_todo = NewTodo {
+    pub fn insert(todo: NewTodo, conn: &Connection) -> QueryResult<usize> {
+        let new_todo = NewDbTodo {
             description: todo.description,
             points: todo.points,
             user_id: todo.user_id,
             created_at: Utc::now(),
             due_by: todo.due_by,
+            completed: false,
         };
         diesel::insert_into(todos)
             .values(&new_todo)

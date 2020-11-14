@@ -3,7 +3,7 @@ use crate::{
     constants,
     error::ServiceError,
     models::{
-        todo::{Todo, TodoDTO},
+        todo::{Todo, TodoDTO, NewTodo},
     }
 };
 use actix_web::{web, http::StatusCode};
@@ -29,7 +29,7 @@ pub fn query(query: String, pool: &web::Data<Pool>) -> Result<Vec<Todo>, Service
     }
 }
 
-pub fn insert(new_todo: TodoDTO, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
+pub fn insert(new_todo: NewTodo, pool: &web::Data<Pool>) -> Result<(), ServiceError> {
     match Todo::insert(new_todo, &pool.get().unwrap()) {
         Ok(_) => Ok(()),
         Err(_) => Err(ServiceError::new(StatusCode::INTERNAL_SERVER_ERROR, constants::MESSAGE_CAN_NOT_INSERT_DATA.to_string())),

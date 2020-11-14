@@ -3,6 +3,7 @@ use crate::{
     constants,
     models::{
         task::TaskDTO,
+        task::NewTask,
         response::ResponseBody,
     },
     services::task_service,
@@ -34,7 +35,7 @@ pub async fn query(query: web::Path<String>, pool: web::Data<Pool>) -> Result<Ht
 }
 
 // POST api/tasks
-pub async fn insert(new_task: web::Json<TaskDTO>, pool: web::Data<Pool>) -> Result<HttpResponse> {
+pub async fn insert(new_task: web::Json<NewTask>, pool: web::Data<Pool>) -> Result<HttpResponse> {
     match task_service::insert(new_task.0, &pool) {
         Ok(()) => Ok(HttpResponse::Created().json(ResponseBody::new(constants::MESSAGE_OK, constants::EMPTY))),
         Err(err) => Ok(err.response()),
